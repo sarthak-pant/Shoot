@@ -133,8 +133,34 @@
             </div>
          </div>
 
-         
+         <!--Results summary after the rounds over-->
+         <div id="results-screen" class="screen">
+            <div class="results-container">
+                <h2 class="results-title">RESULTS</h2>
+                <div class="results-grid">
+                    <div class="result-card result-score-card"><span class="result-label">Score</span><span class="result-value" id="result-score">0</span><span class="result-label result-prev-label" id="result-prev-label">Best: <span id="result-prev-best">0</span></span></div>
+                    <div class="result-card"><span class="result-label">Accuracy</span><span class="result-value" id="result-accuracy">0%</span></div>
+                    <div class="result-card"><span class="result-label">Hits</span><span class="result-value" id="result-hits">0%</span></div>
+                    <div class="result-card"><span class="result-label">Misses</span><span class="result-value" id="result-misses">0%</span></div>
+                    <div class="result-card"><span class="result-label">Best Combo</span><span class="result-value" id="result-combo">0%</span></div>
+                    <div class="result-card"><span class="result-label">Avg Reaction</span><span class="result-value" id="result-reaction">0%</span></div>
+                </div>
+
+                <div class="result-new-best hidden" id="result-new-best">★ NEW PERSONAL BEST! ★</div>
+
+                <div class="result-actions">
+                    <button id="retry-btn" class="btn-primary">PLAY AGAIN</button>
+                    <button id="menu-btn" class="btn-secondary">MENU</button>
+                </div>
+                <div class="results-mode-badge" id="result-mode-badge">CLASSIC</div>
+            </div>
+         </div>
+
+         <div id="popup-container" aria-hidden="true"></div>
+
     </div>
+
+    <script src="game.js"></script>
 </body>
 
 </html>
