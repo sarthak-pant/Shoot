@@ -93,6 +93,29 @@
                 <button id="settings-close" class="btn-secondary">Close</button>
             </div>
         </div>
+
+        <!-- Game Screen!-->
+         <div id="game-screen" class="screen">
+            <div id="hud">
+                <div class="hud-top">
+                    <div class="hud-stat"><span class="hud-label">SCORE</span><span class="hud-value" id="hud-score">0</span></div>
+                    <div class="hud-stat hud-progress">
+                        <svg viewBox="0 0 100 100" class="progress-ring">
+                            <circle class="progress-ring-bg" cx="50" cy="50" r="42"/>
+                            <circle class="progress-ring-fill" id="progress-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="0"/>
+                        </svg>
+                        <span class="progress-time" id="hud-time">60</span>
+                    </div>
+
+                    <div class="hud-stat"><span class="hud-label">ACCURACY</span><span class="hud-value" id="hud-accuracy">0%</span></div>
+                </div>
+                <div class="hud-bottom">
+                    <div class="hud-stat-sm"><span class="hud-label">COMBO</span><span class="hud-value-sm" id="hud-combo">x0</span></div>
+                    <div class="hud-stat-sm"><span class="hud-label">COMBO</span><span class="hud-value-sm" id="hud-combo">x0</span></div>
+                    <div class="hud-stat-sm"><span class="hud-label">COMBO</span><span class="hud-value-sm" id="hud-combo">x0</span></div>
+                </div>
+            </div>
+         </div>
     </div>
 </body>
 
