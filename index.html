@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoot: FPS Aim Trainer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app">
+
+        <!--Menu Screen-->
+        <div id="menu-screen" class="screen active">
+            <div class="menu-container">
+                <header class="menu-header">
+                    <h1 class="logo">SHOOT</h1>
+                    <p class="subtitle">FPS AIM TRAINER</p>
+                </header>
+
+                <!--Mode selector: 5 modes-->
+                <section class="mode-selector">
+                    <div class="mode-list" id="mode-list">
+                        <button class="mode-btn active" data-mode="classic"><span class="mode-icon">🎪</span><span
+                                class="mode-name">Classic</span><span class="mode-desc">Standard targets</span></button>
+                        <button class="mode-btn" data-mode="precision"><span class="mode-icon">🎯</span><span
+                                class="mode-name">Precision</span><span class="mode-desc">Tiny targets</span></button>
+                        <button class="mode-btn" data-mode="speed"><span class="mode-icon">⚡</span><span
+                                class="mode-name">Speed</span><span class="mode-desc">Multiple targets</span></button>
+                        <button class="mode-btn" data-mode="reaction"><span class="mode-icon">🧠</span><span
+                                class="mode-name">Reaction</span><span class="mode-desc">Click as fast as you
+                                can!</span></button>
+                        <button class="mode-btn" data-mode="tracking"><span class="mode-icon">🌀</span><span
+                                class="mode-name">Tracking</span><span class="mode-desc">Moving targets</span></button>
+                    </div>
+                </section>
+                <div class="menu-actions">
+                    <button id="start-btn" class="btn-primary">START GAME</button>
+                    <button id="settings-toggle" class="btn-secondary">⚙️ Settings</button>
+                </div>
+
+                <section class="stats-overview">
+                    <h3>Personal Best</h3>
+                    <div class="best-grid">
+                        <div class="best-item"><span class="best-label">Classic</span><span class="best-value" id="best-classic">0</span></div>
+                        <div class="best-item"><span class="best-label">Precision</span><span class="best-value" id="best-precision">0</span></div>
+                        <div class="best-item"><span class="best-label">Speed</span><span class="best-value" id="best-speed">0</span></div>
+                        <div class="best-item"><span class="best-label">Reaction</span><span class="best-value" id="best-reaction">0</span></div>
+                        <div class="best-item"><span class="best-label">Tracking</span><span class="best-value" id="best-tracking">0</span></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div id="settings-panel" class="settings-panel">
+            <div class="settings-backdrop"></div>
+            <div class="settings-content">
+                <h2>Settings</h2>
+
+                <div class="setting-row">
+                    <label>Round Duration</label>
+                    <div class="setting-options" id="duration-options">
+                        <button class="setting-btn" data-value="30">30s</button>
+                        <button class="setting-btn active" data-value="60">60s</button>
+                        <button class="setting-btn" data-value="120">120s</button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <label>Sound</label>
+                    <div class="setting-options" id="sound-options">
+                        <button class="setting-btn active" data-value="on">On</button>
+                        <button class="setting-btn" data-value="off">Off</button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <label>Background Animation</label>
+                    <div class="setting-options" id="bg-options">
+                        <button class="setting-btn active" data-value="on">On</button>
+                        <button class="setting-btn" data-value="off">Off</button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <label>Screen Shake</label>
+                    <div class="setting-options" id="shake-options">
+                        <button class="setting-btn active" data-value="on">On</button>
+                        <button class="setting-btn" data-value="off">Off</button>
+                    </div>
+                </div>
+
+                <button id="settings-close" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
