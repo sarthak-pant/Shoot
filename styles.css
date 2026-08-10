@@ -242,3 +242,77 @@ body {
   color: var(--acid);
   letter-spacing: 0.02em;
 }
+
+.settings-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t) var(--ease-out);
+}
+.settings-panel.open{opacity: 1; pointer-events: all;}
+.settings-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 6, .72);
+  backdrop-filter: blur(2px);
+}
+.settings-content {
+  position: relative;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--acid);
+  padding: var(--sp5);
+  width: 90%;
+  max-width: 430px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp4);
+}
+.settings-content h2 {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  letter-spacing: 0.06em;
+  text-align: left;
+  color: var(--ink-hi);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.setting-row label {
+  display: block;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--ink);
+  margin-bottom: var(--sp2);
+}
+.setting-options{
+  display: flex; gap: 0;
+}
+.setting-btn {
+  flex: 1;
+  padding: var(--sp2);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  color: var(--ink-mid);
+  font-size: .72rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out);
+}
+.setting-btn+.setting-btn{border-left: none;}
+.setting-btn:hover {
+  border-color: var(--line-hi);
+  color: var(--ink-hi);
+}
+.setting-btn:active {
+  background: var(--acid);
+  border-color: var(--acid);
+  color: #14110a;
+}
