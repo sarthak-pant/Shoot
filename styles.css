@@ -199,3 +199,46 @@ body {
 }
 
 .menu-actions{display: flex; gap: var(--sp1);flex-wrap: wrap;}
+
+.stats-overview {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  padding: var(--sp3) 0 0;
+  border-top: 2px solid var(--line-hi);
+}
+
+.stats-overview h3 {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--ink-low);
+  margin: 0 0 var(--sp3) var(--sp4);
+}
+
+.best-grid{display: flex;}
+
+.best-item {
+  flex: 1;
+  padding: var(--sp3) var(--sp2);
+  text-align: left;
+  border-left: 1px solid var(--line);
+}
+
+.best-item:first-child{border-left: none;}
+
+.best-label{
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink-low);
+  margin-bottom: var(--sp1);
+}
+
+.best-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--acid);
+  letter-spacing: 0.02em;
+}
