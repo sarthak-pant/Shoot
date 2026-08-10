@@ -316,3 +316,11 @@ body {
   border-color: var(--acid);
   color: #14110a;
 }
+
+#game-screen {
+  background: var(--bg);
+}
+
+#game-canvas {
+  
+}
