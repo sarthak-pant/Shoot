@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+*,*::before,*::after{margin:0;padding: 0;box-sizing: border-box;}
+
+:root{
+  /*one for nubmers one for words*/
+  --font-display: 'Bebas Neue', Arial Narrow, sans-serif;
+  --font-body: 'IBM Plex Mono', Courier New, monospace;
+
+  --bg: #0c0b09;
+  --bg-1: #13110f;
+  --bg-2: #1a1814;
+  --bg-3: #23201a;
+  --line: #302d26;
+  --line-hi: #423d32;
+  --ink-hi: #ede7d8;
+  --ink: #cfc9b8;
+  --ink-mid: #938d7c;
+  --ink-low: #6e6859;
+
+  --acid: #e7b741;
+  --acid-deep: #bd8f1f;
+  --sienna: #c45a36;
+
+  /*colors for each mode*/
+  --mode-classic: #e7b73c;
+  --mode-precision: #c8bd5c;
+  --mode-speed: #e8662c;
+  --mode-reaction: #c26fc4;
+  --mode-tracking: #2db89f;
+
+  /*spacing*/
+  --sp1:6px; --sp2:12px;--sp3: 18px; --sp4:24px; --sp5:36px;--sp6:54px;--sp7:90px;--sp8:144px;
+
+  --rad-pane:0px; --rad-instr:2px; --rad-coin:50%;
+
+  /*transitions!*/
+  --t-fast:120ms;--t:200ms;--t-slow:320ms;
+  --ease-out:cubic-bezier(0.22, 1, .36, 1);
+  --ease-snap: cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+html{font-size:16px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink-hi);
+  overflow: hidden;
+  height: 1000vh;
+  width: 100vw;
+  font-variant-numeric: tabular-nums lining-nums;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app{height:100vh;width: 100vw;position: relative;}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-slow) var(--ease-out), transform var(--t-slow) var(--ease-out);
+  transform: scale(0.985);
+}
+.screen.active{opacity:1; pointer-events: all; transform: scale(1);}
+
+.menu-container {
+  width: calc(100% - var(--sp7));
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp6);
+}
+
+.menu-header {
+  text-align: left;
+  border-left: var(--sp2) solid var(--acid); padding-left: var(--sp3);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: clamp(3.4rem, 12vw, 7rem);
+  line-height: 0.82; letter-spacing: 0.02em;
+  color: var(--ink-hi); font-weight: 400; text-transform: uppercase;
+}
+
