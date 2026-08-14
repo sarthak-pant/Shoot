@@ -10,6 +10,7 @@ const MODE_COLORS = {
     tracking: {primary: '#2db89f', secondary: '#1d8f79', glow: 'rgba(45, 184, 159, 0.28)'}
 };
 
+// configuring each mode's properties
 const MODE_CONFIG = {
     classic: {duration: 60, targetRadius: 35, maxTargets:1, lifetime: 0, baseScore: 100, spawnDelay: 0.3, targetTypes: ['static']},
     precision: {duration: 60, targetRadius: 18, maxTargets: 1, lifetime: 0, baseScore: 250, spawnDelay: 0.4, targetTypes: ['static']},
@@ -17,3 +18,4 @@ const MODE_CONFIG = {
     reaction: {duration: 0, targetRadius: 35, maxTargets: 1, lifetime: 0, baseScore: 0, spawnDelay: 0, targetTypes: ['static']},
     tracking: {duration: 0, targetRadius: 30, maxTargets: 2, lifetime: 3.5, baseScore: 150, spawnDelay: 0.6, targetTypes: ['strafe', 'float', 'follow']}
 }
+

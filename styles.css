@@ -47,7 +47,7 @@ body {
   background: var(--bg);
   color: var(--ink-hi);
   overflow: hidden;
-  height: 1000vh;
+  height: 100vh;
   width: 100vw;
   font-variant-numeric: tabular-nums lining-nums;
   user-select: none;
@@ -133,7 +133,7 @@ body {
   border-color: var(--mode-classic);
   color: var(--mode-classic);
   background: var(--bg-2);
-  transform: translateY(calc(-1 * var(sp1) - 2px));
+  transform: translateY(calc(-1 * var(--sp1) - 2px));
 }
 .mode-btn.active::after {
   content: "";
@@ -311,7 +311,7 @@ body {
   border-color: var(--line-hi);
   color: var(--ink-hi);
 }
-.setting-btn:active {
+.setting-btn.active {
   background: var(--acid);
   border-color: var(--acid);
   color: #14110a;
@@ -322,5 +322,144 @@ body {
 }
 
 #game-canvas {
-  
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  display: block;
 }
+
+.pause-btn {
+  position: absolute;
+  bottom: var(--sp4);
+  right: var(--sp4);
+  z-index: 11;
+  background:var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  width: 46px;
+  height: 46px;
+  color: var(--ink-mid);
+  cursor: pointer;
+  font-size: 1.15rem;
+  font-family: var(--font-body);
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
+}
+.pause-btn:hover {
+  background: var(--bg-3);
+  border-color: var(--acid);
+  color: var(--acid);
+}
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: var(--sp3) var(--sp4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp2);
+  pointer-events: none;
+}
+.hud-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sp3);
+
+}
+.hud-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 78px;
+}
+.hud-stat:first-child {
+  border-left: 3px solid var(--acid);
+  padding-left: var(--sp2);
+}
+.hud-label {
+  font-size: .58rem;
+  letter-spacing: .22em;
+  color: var(--ink-low);
+  text-transform: uppercase;
+}
+.hud-value {
+  font-size: 1.55rem;
+  font-weight: 600;
+  line-height: 1;
+  margin-top: calc(var(--sp1)/2);
+  letter-spacing: -0.02em;
+}
+.hud-value-sm {
+   font-size: 0.8rem;
+   font-weight: 600;
+   color: var(--ink);
+}
+.hud-stat-sm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+}
+.hud-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--sp3);
+}
+.hud-progress {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex: none;
+
+}
+.progress-ring {
+  display: block;
+  width: 52px;
+  height: 52px;
+  transform: rotate(-90deg);
+}
+.progress-ring-bg {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 4;
+}
+.progress-ring-fill {
+  fill: none;
+  stroke: var(--acid);
+  stroke-width: 4;
+  stroke-linecap: butt;
+  transition: stroke-dashoffset .3s linear;
+}
+.progress-time {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.hud-mode-badge {
+  font-size: .58rem;
+  letter-spacing: 0.24em;
+  color: var(--acid);
+  padding: var(--sp1) var(--sp2);
+  border: 1px solid var(--acid);
+  text-transform: uppercase;
+}
+
