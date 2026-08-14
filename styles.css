@@ -463,3 +463,28 @@ body {
   text-transform: uppercase;
 }
 
+
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(5, 5, 7, .86);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp4);
+  backdrop-filter: blur(3px);
+  transition: opacity var(--t) var(--ease-out);
+}
+.pause-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.pause-overlay h2 {
+  font-family: var(--font-display);
+  font-size: 3.4rem;
+  letter-spacing: .14em;
+  color: var(--ink-hi); font-weight: 400;
+}
+
