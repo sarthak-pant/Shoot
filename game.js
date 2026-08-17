@@ -329,4 +329,89 @@ class StatsManager {
   getBest(mode) {
     return this.data.best[mode] || 0;
   }
+  // True when the score beats the stored best for this mode.
+  // For reaction mode, lower average time is better.
+  isNewBest(mode, score, lowerIsBetter = false) {
+    const best = this.getBest(mode);
+    if (best === 0 && score > 0) return true;  // first record
+    return lowerIsBetter ? score < best : score > best;
+  }
+
+  // Return all best scores as a plain object.
+  getAllBest() {
+    return { ...this.data.best };
+  }
+
+  // Record a completed session and persist it.
+  // Set lowerIsBetter=true for reaction mode (lower average time wins).
+  saveSession(session, lowerIsBetter = false) {
+    const { mode, score, accuracy, hits, misses, bestCombo, avgReaction } = session;
+
+    this.data.totalSessions++;
+
+    // Update personal best. For reaction mode, lower score is better.
+    const isBetter = lowerIsBetter      ? (score < this.data.best[mode])
+      : (score > this.data.best[mode]);
+    if (this.data.best[mode] === undefined || isBetter) {
+      this.data.best[mode] = score;
+    }
+
+    // Append to history, capped at 200 entries.
+    this.data.history.push({
+      mode, score, accuracy, hits, misses, bestCombo, avgReaction,
+      date: Date.now(),
+    });
+    if (this.data.history.length > 200) {
+      this.data.history = this.data.history.slice(-200);
+    }
+
+    this.save();
+  }
+}
+
+
+
+class GameEngine {
+  constructor(canvas) {
+    this.canvas    = canvas;
+    this.context   = canvas.getContext('2d');
+    this.audio     = new AudioManager();
+    this.particles = new ParticleSystem();
+    this.stats     = new StatsManager();
+
+    // Game state machine: idle → countdown → playing → paused → ended
+    this.state   = 'idle';
+    this.config  = null;
+    this.colors  = null;
+    this.mode    = 'classic';
+
+    // Scoring.
+    this.score     = 0;
+    this.hits      = 0;
+    this.misses    = 0;
+    this.combo     = 0;
+    this.bestCombo = 0;
+
+    // Timer.
+    this.timeLeft  = 0;
+    this.totalTime = 0;
+
+    // Reaction mode.
+    this.reactionTimes = [];
+    this.round         = 0;
+
+    // Spawn pacing.
+    this.spawnCooldown = 0;
+
+    // Screen shake.
+    this.shakeTime      = 0;
+    this.shakeIntensity = 0;
+    this.shakeEnabled   = true;
+
+    // Settings.
+    this.bgAnimation = true;
+
+    // Loop state.
+    this.lastFrame = 0;
+    this.animId    = null;
 
