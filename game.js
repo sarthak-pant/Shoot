@@ -544,4 +544,234 @@ class GameEngine {
     const previousBest = this.stats.getBest(this.mode);
 
     // For reaction mode, the score IS the average reaction time (lower is better).
+    // For all other modes, score is accumulated points (higher is better).
+    const finalScore = (this.mode === 'reaction' && avgReaction > 0) ? avgReaction : this.score;
 
+    const session = {
+      mode: this.mode,
+      score: finalScore,
+      accuracy,
+      hits: this.hits,
+      misses: this.misses,
+      bestCombo: this.bestCombo,
+      avgReaction,
+      previousBest,
+    };
+
+    const isNewBest = this.stats.isNewBest(this.mode, finalScore, this.mode === 'reaction');
+    this.stats.saveSession(session, this.mode === 'reaction');
+
+    if (this.onUpdate) {
+      this.onUpdate({ type: 'end', session, isNewBest });
+    }
+  }
+
+  //  Input 
+
+  // Process a mouse click on the canvas.
+  handleClick(clientX, clientY) {
+    if (this.state !== 'playing') return;
+
+    const rect = this.canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    // Ignore clicks outside the canvas.
+    if (x < 0 || y < 0 || x > this.width || y > this.height) return;
+
+    // Check each target for a hit.
+    let hit = false;
+
+    for (const target of this.targets) {
+      if (target.contains(x, y)) {
+        target.hit = true;
+        hit = true;
+
+        // Reaction mode: track timing per target, no combo/points.
+        if (this.mode === 'reaction') {
+          const reactionTime = performance.now() - target.spawnedAt;
+          this.reactionTimes.push(reactionTime);
+          this.hits++;
+          this.audio.hit();
+          this.particles.emit(target.x, target.y, this.colors.primary, 18, 250);
+          this.spawnPopup(target.x, target.y, `${Math.round(reactionTime)}ms`, false);
+
+          this.round++;
+          if (this.round >= this.config.rounds) {
+            this.end();
+            return;
+          }
+          this.spawnTarget();
+          break;
+        }
+
+        this.hits++;
+        this.combo++;
+        if (this.combo > this.bestCombo) this.bestCombo = this.combo;
+
+        // Score = base * combo multiplier (capped at 10x).
+        const comboMultiplier = Math.min(this.combo, 10);
+        const points = Math.round(
+          this.config.baseScore * (1 + (comboMultiplier - 1) * 0.2)
+        );
+        this.score += points;
+
+        // Sound: every 3rd combo gets a special tone.
+        if (this.combo >= 3 && this.combo % 3 === 0) {
+          this.audio.combo();
+        } else {
+          this.audio.hit();
+        }
+
+        // Visual feedback.
+        this.particles.emit(target.x, target.y, this.colors.primary, 18, 250);
+        this.spawnPopup(target.x, target.y, `+${points}`, false);
+
+        break;
+      }
+    }
+
+    // Miss: only penalise in non-reaction modes.
+    if (!hit && this.mode !== 'reaction') {
+      this.misses++;
+      this.combo = 0;
+      this.audio.miss();
+
+      if (this.shakeEnabled) {
+        this.shakeTime     = 0.1;
+        this.shakeIntensity = 4;
+      }
+
+      this.spawnPopup(x, y, 'MISS', true);
+    }
+  }
+
+  //  Popup helpers 
+
+  // Create a floating text element that fades and rises.
+  spawnPopup(x, y, text, isMiss) {
+    const element = document.createElement('div');
+    element.className   = 'float-popup' + (isMiss ? ' miss' : '');
+    element.textContent = text;
+    element.style.left  = x + 'px';
+    element.style.top   = y + 'px';
+    getElem('popup-container').appendChild(element);
+    setTimeout(() => element.remove(), 900);
+  }
+
+  //  Target spawning 
+
+  spawnTarget() {
+    const padding = this.config.targetRadius + 20;
+    const types   = this.config.targetTypes;
+    const type    = types[randInt(0, types.length - 1)];
+
+    // Reaction mode targets auto-expire after 2.5s.
+    const lifetime = this.mode === 'reaction' ? 2.5 : this.config.lifetime;
+
+    const target = new Target({
+      x: rand(padding, this.width  - padding),
+      y: rand(padding, this.height - padding),
+      radius: this.config.targetRadius,
+      type,
+      lifetime,
+      color: this.colors.primary,
+    });
+
+    this.targets.push(target);
+  }
+
+  //  Game loop 
+
+  mainLoop(now) {
+    if (this.state === 'ended' || this.state === 'paused') return;
+
+    const deltaTime = Math.min((now - this.lastFrame) / 1000, 0.05);
+    this.lastFrame = now;
+
+    this.update(deltaTime);
+    this.render(now);
+
+    this.animId = requestAnimationFrame((t) => this.mainLoop(t));
+  }
+
+  update(deltaTime) {
+    if (this.state !== 'playing') return;
+
+    // Countdown timer (not used in reaction mode).
+    if (this.mode !== 'reaction') {
+      this.timeLeft -= deltaTime;
+      if (this.timeLeft <= 0) {
+        this.timeLeft = 0;
+        this.end();
+        return;
+      }
+    }
+
+    // Spawn targets when below the maximum for this mode.
+    this.spawnCooldown -= deltaTime;
+    if (this.spawnCooldown <= 0) {
+      const alive = this.targets.filter(t => !t.hit && !t.isExpired()).length;
+
+      if (this.mode === 'reaction') {
+        if (this.targets.length === 0) this.spawnTarget();
+      } else if (alive < this.config.maxTargets) {
+        this.spawnTarget();
+        this.spawnCooldown = this.config.spawnDelay;
+      }
+    }
+
+    // Update existing targets.
+    for (const target of this.targets) {
+      target.update(deltaTime, this.width, this.height);
+    }
+    this.targets = this.targets.filter(t => !t.hit && !t.isExpired());
+
+    // Advance particles.
+    this.particles.update(deltaTime);
+
+    // Decay screen shake.
+    if (this.shakeTime > 0) this.shakeTime -= deltaTime;
+
+    // Notify the UI of the current state.
+    if (this.onUpdate) {
+      const accuracy = this.hits + this.misses > 0
+        ? Math.round((this.hits / (this.hits + this.misses)) * 100) : 0;
+
+      const isReaction = this.mode === 'reaction';
+      const avgReactionNow = isReaction && this.reactionTimes.length > 0
+        ? Math.round(this.reactionTimes.reduce((a, b) => a + b, 0) / this.reactionTimes.length) : 0;
+
+      this.onUpdate({
+        type: 'tick',
+        score: isReaction ? avgReactionNow : this.score,
+        accuracy,
+        combo: isReaction ? 0 : this.combo,
+        hits: this.hits,
+        timeLeft: this.timeLeft,
+        totalTime: this.totalTime,
+        mode: this.mode,
+        round: this.round,
+        totalRounds: this.config.rounds || 0,
+        best: this.stats.getBest(this.mode),
+      });
+    }
+  }
+
+  render(now) {
+    const context = this.context;
+    const W = this.width;
+    const H = this.height;
+
+    context.save();
+
+    // Apply screen shake translation.
+    if (this.shakeTime > 0) {
+      const shakeX = (Math.random() - 0.5) * this.shakeIntensity * 2;
+      const shakeY = (Math.random() - 0.5) * this.shakeIntensity * 2;
+      context.translate(shakeX, shakeY);
+    }
+
+    // Clear background.
+  }
+}
