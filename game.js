@@ -19,3 +19,181 @@ const MODE_CONFIG = {
     tracking: {duration: 0, targetRadius: 30, maxTargets: 2, lifetime: 3.5, baseScore: 150, spawnDelay: 0.6, targetTypes: ['strafe', 'float', 'follow']}
 }
 
+// Sound definitions used by AudioManager.
+const SOUND_DEFS = {
+  hit:      { type: 'sine', freq: [880, 1760], dur: 0.12, vol: 0.18 },
+  miss:     { type: 'sawtooth', freq: [200, 80], dur: 0.15, vol: 0.08 },
+  combo:    { type: 'sine', freq: [660, 1320], dur: 0.10, vol: 0.12 },
+  gameover: { type: 'sine', notes: [523, 659, 784, 1047], dur: 0.15, vol: 0.15, delay: 0.12 },
+};
+
+
+const rand  = (min, max) => Math.random() * (max - min) + min;
+const randInt = (min, max) => Math.floor(rand(min, max + 1));
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+
+// Shorthand for document.getElementById.
+const getElem = (id) => document.getElementById(id);
+
+// Reads the currently selected value from a settings button group.
+function getActiveSetting(groupId) {
+  const active = document.querySelector(`#${groupId} .setting-btn.active`);
+  return active ? active.CDATA_SECTION_NODE.value : null;
+}
+
+
+class AudioManager {
+  constructor() {
+    this.context = null;
+    this.enabled = true;
+  }
+
+  // Create the AudioContext (must happen after a user gesture on some browsers).
+  init() {
+    try {
+      this.context = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (_) {}
+  }
+
+  // Chrome blocks autoplay  resume on first interaction.
+  ensureResumed() {
+    if (this.context && this.context.state === 'suspended') {
+      this.context.resume();
+    }
+  }
+
+   // Play a single oscillator tone with optional frequency sweep.
+  playTone(type, frequency, startTime, duration, volume, endFrequency) {
+    const oscillator = this.context.createOscillator();
+    const gainNode = this.context.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.context.destination);
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+    if (endFrequency) {
+      oscillator.frequency.exponentialRampToValueAtTime(endFrequency, startTime + duration * 0.7);
+    }
+
+    gainNode.gain.setValueAtTime(volume, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  }
+
+  // Look up a sound definition and play it.
+  play(name) {
+    if (!this.enabled || !this.context) return;
+    this.ensureResumed();
+
+    const sound = SOUND_DEFS[name];
+    if (!sound) return;
+
+    const now = this.context.currentTime;
+
+    if (sound.notes) {
+      // Multi-note sounds (e.g. game over fanfare).
+      sound.notes.forEach((note, index) => {
+        this.playTone(sound.type, note, now + index * sound.delay, sound.dur, sound.vol);
+      });
+    } else {
+      // Single sounds witl frequency sweep (freq[0] → freq[1]).
+      this.playTone(sound.type, sound.freq[0], now, sound.dur, sound.vol, sound.freq[1]);
+    }
+  }
+
+  hit() { this.play('hit'); }
+  miss() { this.play('miss'); }
+  combo() { this.play('combo'); }
+  gameOver() { this.play('gameover'); }
+}
+
+
+
+class ParticleSystem {
+  constructor() {
+    this.particles = [];
+  }
+
+  // Spawn a burst of particles at (x, y) with the given color.
+  emit(x, y, color, count = 16, speed = 200) {
+    for (let i = 0; i < count; i++) {
+      const angle = rand(0, Math.PI * 2);
+      const velocity = rand(speed * 0.5, speed);
+
+      this.particles.push({
+        x, y,
+        vx: Math.cos(angle) * velocity,
+        vy: Math.sin(angle) * velocity,
+        life: 1,
+        decay: rand(0.015, 0.04),
+        size: rand(2, 5),
+        color,
+      });
+    }
+  }
+
+  // Advance all particles (apply gravity, fade out).
+  update(deltaTime) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+
+      p.x += p.vx * deltaTime;
+      p.y += p.vy * deltaTime;
+      p.vy += 120 * deltaTime;          // gravity
+      p.life-= p.decay;
+
+      if (p.life <= 0) {
+        this.particles.splice(i, 1);
+      }
+    }
+  }
+
+  // Draw all active particles.
+  render(context) {
+    for (const p of this.particles) {
+      context.globalAlpha = p.life;
+      context.fillStyle = p.color;
+      context.beginPath();
+      context.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.globalAlpha = 1;
+  }
+}
+
+
+
+class Target {
+  constructor(config) {
+    this.x = config.x;
+    this.y = config.y;
+    this.radius= config.radius;
+    this.type = config.type || 'static';
+    this.lifetime= config.lifetime || 0;
+    this.baseColor= config.color || '#e7b73c';
+
+    this.elapsed= 0;
+    this.hit = false;
+    this.spawnedAt = performance.now();
+
+    // Movement state.
+    this.direction= rand(0, Math.PI * 2);
+    this.speed = rand(80, 160);
+    this.strafeDir= 1;
+    this.strafeSpeed = rand(100, 200);
+  }
+
+  // Advance the target's position based on its movement type.
+  update(deltaTime, canvasWidth, canvasHeight) {
+    this.elapsed += deltaTime;
+
+    switch (this.type) {
+      case 'strafe':
+        this.x += this.strafeDir * this.strafeSpeed * deltaTime;
+        if (this.x > canvasWidth - this.radius - 20 || this.x < this.radius + 20) {
+          this.strafeDir *= -1;
+        }
