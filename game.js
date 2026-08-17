@@ -100,7 +100,6 @@ class AudioManager {
         this.playTone(sound.type, note, now + index * sound.delay, sound.dur, sound.vol);
       });
     } else {
-      // Single sounds witl frequency sweep (freq[0] → freq[1]).
       this.playTone(sound.type, sound.freq[0], now, sound.dur, sound.vol, sound.freq[1]);
     }
   }
@@ -143,7 +142,7 @@ class ParticleSystem {
 
       p.x += p.vx * deltaTime;
       p.y += p.vy * deltaTime;
-      p.vy += 120 * deltaTime;          // gravity
+      p.vy += 120 * deltaTime;  // gravity
       p.life-= p.decay;
 
       if (p.life <= 0) {
@@ -197,3 +196,137 @@ class Target {
         if (this.x > canvasWidth - this.radius - 20 || this.x < this.radius + 20) {
           this.strafeDir *= -1;
         }
+        break;
+
+      case 'float':
+        this.direction += rand(-1, 1) * deltaTime;
+        this.x += Math.cos(this.direction) * this.speed * deltaTime;
+        this.y += Math.sin(this.direction) * this.speed * deltaTime;
+        this.x = clamp(this.x, this.radius + 10, canvasWidth  - this.radius - 10);
+        this.y = clamp(this.y, this.radius + 10, canvasHeight - this.radius - 10);
+        break;
+
+      case 'follow':
+        const angle = Math.atan2(
+          canvasHeight * 0.5 - this.y,
+          canvasWidth  * 0.5 - this.x        );
+        this.x += Math.cos(angle) * this.speed * deltaTime * 0.4;
+        this.y += Math.sin(angle) * this.speed * deltaTime * 0.4;
+        break;
+    }
+  }
+
+  // Draw the target — outer glow, pulsing ring, inner dot, and crosshair.
+  render(context, now) {
+    if (this.hit) return;
+
+    const r = this.radius;
+    const pulse = Math.sin(now * 0.003) * 0.04 + 0.96;
+
+    // Fade out during the last 300ms of the target's lifetime.
+    let alpha = 1;
+    if (this.lifetime > 0 && this.elapsed > this.lifetime - 0.3) {
+      alpha = clamp((this.lifetime - this.elapsed) / 0.3, 0, 1);
+    }
+
+    context.save();
+    context.globalAlpha = alpha;
+
+    // Outer radial glow.
+    const gradient = context.createRadialGradient(this.x, this.y, r * 0.2, this.x, this.y, r * 1.5);
+    gradient.addColorStop(0, this.baseColor + '30');
+    gradient.addColorStop(1, this.baseColor + '00');
+    context.fillStyle = gradient;
+    context.beginPath();
+    context.arc(this.x, this.y, r * 1.5, 0, Math.PI * 2);
+    context.fill();
+
+    // Pulsing outer ring.
+    context.beginPath();
+    context.arc(this.x, this.y, r * pulse, 0, Math.PI * 2);
+    context.fillStyle = this.baseColor + '20';
+    context.fill();
+
+    // Main filled circle.
+    context.beginPath();
+    context.arc(this.x, this.y, r, 0, Math.PI * 2);
+    context.fillStyle = this.baseColor + '25';
+    context.fill();
+
+    // Main border.
+    context.strokeStyle = this.baseColor;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(this.x, this.y, r, 0, Math.PI * 2);
+    context.stroke();
+
+    // Inner ring.
+    context.beginPath();
+    context.arc(this.x, this.y, r * 0.6, 0, Math.PI * 2);
+    context.strokeStyle = this.baseColor + '80';
+    context.lineWidth = 1.5;
+    context.stroke();
+
+    // Center dot.
+    context.beginPath();
+    context.arc(this.x, this.y, r * 0.2, 0, Math.PI * 2);
+    context.fillStyle = this.baseColor + 'cc';
+    context.fill();
+
+    // Crosshair lines.
+    context.strokeStyle = this.baseColor + '60';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(this.x - r * 0.7, this.y);
+    context.lineTo(this.x + r * 0.7, this.y);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(this.x, this.y - r * 0.7);
+    context.lineTo(this.x, this.y + r * 0.7);
+    context.stroke();
+
+    context.restore();
+  }
+
+  // Hit-test against canvas coordinates.
+  contains(px, py) {
+    return !this.hit && distance(px, py, this.x, this.y) <= this.radius;
+  }
+
+  // True when the target has exceeded its lifetime.
+  isExpired() {
+    return this.lifetime > 0 && this.elapsed > this.lifetime;
+  }
+}
+
+
+
+class StatsManager {
+  constructor() {
+    this.data = this.load();
+  }
+
+  // Default structure when no saved data exists.
+  static defaults() {
+    return { best: {}, history: [], totalSessions: 0 };
+  }
+
+  load() {
+    try {
+      return JSON.parse(localStorage.getItem('shoot_stats')) || StatsManager.defaults();
+    } catch {
+      return StatsManager.defaults();
+    }
+  }
+
+  save() {
+    try {
+      localStorage.setItem('shoot_stats', JSON.stringify(this.data));
+    } catch (_) {}
+  }
+
+  // Return the best score for a given mode (or 0 if none).
+  getBest(mode) {
+    return this.data.best[mode] || 0;
+  }
+
