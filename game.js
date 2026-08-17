@@ -414,4 +414,134 @@ class GameEngine {
     // Loop state.
     this.lastFrame = 0;
     this.animId    = null;
+    // Called by the engine each frame and on game-end.
+    this.onUpdate = null;
+
+    // Background star field (60 twinkling dots).
+    this.starField = Array.from({ length: 60 }, () => ({
+      x: rand(0, 100), y: rand(0, 100),
+      size: rand(0.5, 2), alpha: rand(0.2, 0.6),
+    }));
+
+    // Initialise canvas dimensions and audio.
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+    this.audio.init();
+  }
+
+  //  Canvas sizing 
+
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth  = this.canvas.clientWidth;
+    const cssHeight = this.canvas.clientHeight;
+
+    this.canvas.width  = cssWidth  * dpr;
+    this.canvas.height = cssHeight * dpr;
+    this.context.scale(dpr, dpr);
+
+    this.width  = cssWidth;
+    this.height = cssHeight;
+  }
+
+  //  Mode lifecycle 
+
+  // Start a new game in the given mode.
+  startMode(mode) {
+    this.mode   = mode;
+    this.config = { ...MODE_CONFIG[mode], targetRadius: MODE_CONFIG[mode].targetRadius };
+    this.colors = MODE_COLORS[mode];
+
+    // Reset all state.
+    this.score        = 0;
+    this.hits         = 0;
+    this.misses       = 0;
+    this.combo        = 0;
+    this.bestCombo    = 0;
+    this.targets      = [];
+    this.reactionTimes = [];
+    this.round        = 0;
+    this.shakeTime    = 0;
+    this.particles.particles = [];
+
+    if (mode === 'reaction') {
+      this.totalTime = 0;
+      this.timeLeft  = 0;
+    } else {
+      const duration = this.config.duration || 60;
+      this.totalTime = duration;
+      this.timeLeft  = duration;
+    }
+
+    this.state = 'countdown';
+    this.runCountdown();
+  }
+
+  // 3-2-1 countdown before the game starts.
+  runCountdown() {
+    let count = 3;
+    const overlay    = getElem('countdown-overlay');
+    const numberElem = getElem('countdown-number');
+
+    overlay.classList.remove('hidden');
+
+    const tick = () => {
+      if (count > 0) {
+        numberElem.textContent = count;
+        // Restart the CSS animation by briefly removing it.
+        numberElem.style.animation = 'none';
+        void numberElem.offsetWidth;               // force reflow
+        numberElem.style.animation = 'countPop 0.8s ease-out';
+        count--;
+        setTimeout(tick, 800);
+      } else {
+        overlay.classList.add('hidden');
+        this.state = 'playing';
+        this.lastFrame = performance.now();
+        this.mainLoop(this.lastFrame);
+      }
+    };
+
+    tick();
+  }
+
+  // Pause the game (freezes the loop).
+  pause() {
+    if (this.state === 'playing') {
+      this.state = 'paused';
+      if (this.animId) {
+        cancelAnimationFrame(this.animId);
+        this.animId = null;
+      }
+    }
+  }
+
+  // Resume from pause.
+  resume() {
+    if (this.state === 'paused') {
+      this.state = 'playing';
+      this.lastFrame = performance.now();
+      this.mainLoop(this.lastFrame);
+    }
+  }
+
+  // End the current game, calculate stats, persist, and notify the UI.
+  end() {
+    this.state = 'ended';
+    if (this.animId) {
+      cancelAnimationFrame(this.animId);
+      this.animId = null;
+    }
+
+    this.audio.gameOver();
+
+    const accuracy    = this.hits + this.misses > 0
+      ? Math.round((this.hits / (this.hits + this.misses)) * 100) : 0;
+
+    const avgReaction = this.reactionTimes.length > 0
+      ? Math.round(this.reactionTimes.reduce((a, b) => a + b, 0) / this.reactionTimes.length) : 0;
+
+    const previousBest = this.stats.getBest(this.mode);
+
+    // For reaction mode, the score IS the average reaction time (lower is better).
 
