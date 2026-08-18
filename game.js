@@ -15,7 +15,7 @@ const MODE_CONFIG = {
     classic: {duration: 60, targetRadius: 35, maxTargets:1, lifetime: 0, baseScore: 100, spawnDelay: 0.3, targetTypes: ['static']},
     precision: {duration: 60, targetRadius: 18, maxTargets: 1, lifetime: 0, baseScore: 250, spawnDelay: 0.4, targetTypes: ['static']},
     speed: {duration: 30, targetRadius: 30, maxTargets: 3, lifetime: 1.5, baseScore: 75, spawnDelay: 0.15, targetTypes: ['static']},
-    reaction: {duration: 0, targetRadius: 35, maxTargets: 1, lifetime: 0, baseScore: 0, spawnDelay: 0, targetTypes: ['static']},
+    reaction: {duration: 0, targetRadius: 35, maxTargets: 1, lifetime: 0, baseScore: 0, spawnDelay: 0, targetTypes: ['static'], rounds: 15},
     tracking: {duration: 0, targetRadius: 30, maxTargets: 2, lifetime: 3.5, baseScore: 150, spawnDelay: 0.6, targetTypes: ['strafe', 'float', 'follow']}
 }
 
@@ -39,7 +39,7 @@ const getElem = (id) => document.getElementById(id);
 // Reads the currently selected value from a settings button group.
 function getActiveSetting(groupId) {
   const active = document.querySelector(`#${groupId} .setting-btn.active`);
-  return active ? active.CDATA_SECTION_NODE.value : null;
+  return active ? active.dataset.value : null;
 }
 
 
@@ -902,7 +902,7 @@ class UIController {
     this.el.settingsBackdrop = document.querySelector('.settings-backdrop');
 
     // Bootstrap.
-    this.setupUI(ay();
+    this.setupUI();
   }
 
   //  UI setup 
@@ -1144,5 +1144,7 @@ class UIController {
   }
 }
 
-
+document.addEventListener('DOMContentLoaded', () => {
+    new UIController();
+});
 
