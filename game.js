@@ -576,10 +576,10 @@ class GameEngine {
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    // Ignore clicks outside the canvas.
+    // clicks out of the cnavas are ignored
     if (x < 0 || y < 0 || x > this.width || y > this.height) return;
 
-    // Check each target for a hit.
+    // Check each target for hit
     let hit = false;
 
     for (const target of this.targets) {
@@ -638,7 +638,7 @@ class GameEngine {
       this.audio.miss();
 
       if (this.shakeEnabled) {
-        this.shakeTime     = 0.1;
+        this.shakeTime = 0.1;
         this.shakeIntensity = 4;
       }
 
@@ -651,10 +651,10 @@ class GameEngine {
   // Create a floating text element that fades and rises.
   spawnPopup(x, y, text, isMiss) {
     const element = document.createElement('div');
-    element.className   = 'float-popup' + (isMiss ? ' miss' : '');
+    element.className= 'float-popup' + (isMiss ? ' miss' : '');
     element.textContent = text;
-    element.style.left  = x + 'px';
-    element.style.top   = y + 'px';
+    element.style.left = x + 'px';
+    element.style.top = y + 'px';
     getElem('popup-container').appendChild(element);
     setTimeout(() => element.remove(), 900);
   }
@@ -663,8 +663,8 @@ class GameEngine {
 
   spawnTarget() {
     const padding = this.config.targetRadius + 20;
-    const types   = this.config.targetTypes;
-    const type    = types[randInt(0, types.length - 1)];
+    const types = this.config.targetTypes;
+    const type = types[randInt(0, types.length - 1)];
 
     // Reaction mode targets auto-expire after 2.5s.
     const lifetime = this.mode === 'reaction' ? 2.5 : this.config.lifetime;
@@ -773,5 +773,8 @@ class GameEngine {
     }
 
     // Clear background.
-  }
-}
+    context.fillStyle = '#0c0b09';
+    context.fillRect(-10, -10, W + 20, H + 20);
+
+    // Background grid, stars, and target rings.
+    this.drawBackground(
