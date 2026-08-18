@@ -777,4 +777,372 @@ class GameEngine {
     context.fillRect(-10, -10, W + 20, H + 20);
 
     // Background grid, stars, and target rings.
-    this.drawBackground(
+    this.drawBackground(context, now);
+
+    // Draw targets and particles.
+    for (const target of this.targets) target.render(context, now);
+    this.particles.render(context);
+
+    context.restore();
+  }
+
+  drawBackground(context, now) {
+    if (!this.bgAnimation) return;
+
+    const W = this.width;
+    const H = this.height;
+
+    // Grid lines.
+    context.strokeStyle = 'rgba(255,255,255,0.015)';
+    context.lineWidth = 1;
+    for (let x = 0; x <= W; x += 60) {
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x, H);
+      context.stroke();
+    }
+    for (let y = 0; y <= H; y += 60) {
+      context.beginPath();
+      context.moveTo(0, y);
+      context.lineTo(W, y);
+      context.stroke();
+    }
+
+    // Twinkling stars.
+    for (const star of this.starField) {
+      const flicker = Math.sin(now * 0.001 + star.x * 10) * 0.3 + 0.7;
+      context.fillStyle = `rgba(255,255,255,${star.alpha * flicker * 0.4})`;
+      context.beginPath();
+      context.arc((star.x / 100) * W, (star.y / 100) * H, star.size, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    // Dashed ring pulsing around active targets.
+    for (const target of this.targets.filter(t => !t.hit)) {
+      const glowColor = this.colors?.glow || 'rgba(231,183,60,0.06)';
+      const ringRadius = target.radius + 20 + Math.sin(now * 0.002) * 5;
+
+      context.strokeStyle = glowColor;
+      context.lineWidth = 1;
+      context.setLineDash([4, 8]);
+      context.beginPath();
+      context.arc(target.x, target.y, ringRadius, 0, Math.PI * 2);
+      context.stroke();
+      context.setLineDash([]);
+    }
+  }
+
+  //  Settings 
+
+  applySetting(key, value) {
+    if (key === 'duration') {
+      MODES.forEach(m => {
+        if (m !== 'reaction') MODE_CONFIG[m].duration = parseInt(value);
+      });
+    }
+    if (key === 'sound')  this.audio.enabled   = (value === 'on');
+    if (key === 'shake')  this.shakeEnabled    = (value === 'on');
+    if (key === 'bg')     this.bgAnimation     = (value === 'on');
+  }
+}
+
+
+class UIController {
+  constructor() {
+    this.engine       = null;
+    this.currentMode  = 'classic';
+
+    // Map of logical names → DOM element IDs for the UI cache (this.el).
+    this.idMap = {
+      menu:              'menu-screen',
+      game:              'game-screen',
+      results:           'results-screen',
+      startBtn:          'start-btn',
+      settingsToggle:    'settings-toggle',
+      settingsPanel:     'settings-panel',
+      settingsClose:     'settings-close',
+      pauseOverlay:      'pause-overlay',
+      resumeBtn:         'resume-btn',
+      quitBtn:           'quit-btn',
+      retryBtn:          'retry-btn',
+      menuBtn:           'menu-btn',
+      pauseBtn:          'pause-btn',
+      hudScore:          'hud-score',
+      hudAccuracy:       'hud-accuracy',
+      hudCombo:          'hud-combo',
+      hudHits:           'hud-hits',
+      hudTime:           'hud-time',
+      hudBest:           'hud-best',
+      hudMode:           'hud-mode',
+      progressRing:      'progress-ring',
+      resultScore:       'result-score',
+      resultPrevBest:    'result-prev-best',
+      resultAccuracy:    'result-accuracy',
+      resultHits:        'result-hits',
+      resultMisses:      'result-misses',
+      resultCombo:       'result-combo',
+      resultReaction:    'result-reaction',
+      resultNewBest:     'result-new-best',
+      resultModeBadge:   'result-mode-badge',
+      bestClassic:       'best-classic',
+      bestPrecision:     'best-precision',
+      bestSpeed:         'best-speed',
+      bestReaction:      'best-reaction',
+      bestTracking:      'best-tracking',
+    };
+
+    // Build element cache.
+    this.el = {};
+    Object.keys(this.idMap).forEach(key => {
+      this.el[key] = getElem(this.idMap[key]);
+    });
+
+    // Additional elements not in the ID map.
+    this.el.modeBtns        = document.querySelectorAll('.mode-btn');
+    this.el.settingsBackdrop = document.querySelector('.settings-backdrop');
+
+    // Bootstrap.
+    this.setupUI(ay();
+  }
+
+  //  UI setup 
+
+  setupUI() {
+    // Maps setting-group DOM IDs → engine setting keys.
+    const settingMap = {
+      'duration-options': 'duration',
+      'sound-options':    'sound',
+      'shake-options':    'shake',
+      'bg-options':       'bg',
+    };
+
+    // Mode selector 
+    this.el.modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.el.modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.currentMode = btn.dataset.mode;
+        this.refreshBestDisplay();
+      });
+    });
+
+    //  Settings panel 
+    this.el.settingsToggle.addEventListener('click', () => {
+      this.el.settingsPanel.classList.add('open');
+    });
+
+    const closeSettings = () => this.el.settingsPanel.classList.remove('open');
+    this.el.settingsClose.addEventListener('click', closeSettings);
+    this.el.settingsBackdrop.addEventListener('click', closeSettings);
+
+    // Live settings toggles.
+    document.querySelectorAll('.setting-options').forEach(group => {
+      group.addEventListener('click', (event) => {
+        const btn = event.target.closest('.setting-btn');
+        if (!btn) return;
+
+        group.querySelectorAll('.setting-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const settingKey = settingMap[group.id];
+        if (settingKey && this.engine) {
+          this.engine.applySetting(settingKey, btn.dataset.value);
+        }
+      });
+    });
+
+    //  Canvas & game start 
+    const canvas = getElem('game-canvas');
+
+    const startGame = () => {
+      // Lazy-create the engine on first play.
+      if (!this.engine) {
+        this.engine = new GameEngine(canvas);
+        this.engine.onUpdate = (msg) => this.handleEngineMessage(msg);
+      }
+
+      // Sync all settings from the UI to the engine.
+      Object.keys(settingMap).forEach(groupId => {
+        const value = getActiveSetting(groupId);
+        if (value) this.engine.applySetting(settingMap[groupId], value);
+      });
+
+      this.el.hudBest.textContent  = this.engine.stats.getBest(this.currentMode) || 0;
+      this.el.hudMode.textContent  = this.currentMode.toUpperCase();
+
+      this.switchScreen('game');
+      this.engine.startMode(this.currentMode);
+    };
+
+    this.el.startBtn.addEventListener('click', startGame);
+    this.el.retryBtn.addEventListener('click', startGame);
+
+    // Forward canvas clicks to the engine.
+    canvas.addEventListener('click', (event) => {
+      if (this.engine && this.engine.state === 'playing') {
+        this.engine.handleClick(event.clientX, event.clientY);
+      }
+    });
+
+    //  Keyboard shortcuts 
+    document.addEventListener('keydown', (event) => {
+      if (!this.engine) return;
+
+      if (event.key === 'Escape') {
+        if (this.engine.state === 'playing') {
+          this.engine.pause();
+          this.el.pauseOverlay.classList.remove('hidden');
+        } else if (this.engine.state === 'paused') {
+          this.engine.resume();
+          this.el.pauseOverlay.classList.add('hidden');
+        }
+      }
+
+      if ((event.key === 'r' || event.key === 'R') &&
+          (this.engine.state === 'ended' || this.engine.state === 'idle')) {
+        this.el.retryBtn.click();
+          }
+
+      if ((event.key === 'm' || event.key === 'M') &&
+          this.engine.state === 'ended') {
+        this.el.menuBtn.click();
+          }
+    });
+
+    //  Pause overlay buttons 
+    this.el.resumeBtn.addEventListener('click', () => {
+      if (this.engine) {
+        this.engine.resume();
+        this.el.pauseOverlay.classList.add('hidden');
+      }
+    });
+
+
+
+    this.el.quitBtn.addEventListener('click', () => {
+      if (this.engine) {
+        this.engine.state = 'ended';
+        if (this.engine.animId) {
+          cancelAnimationFrame(this.engine.animId);
+          this.engine.animId = null;
+        }
+        this.el.pauseOverlay.classList.add('hidden');
+        this.switchScreen('menu');
+      }
+    });
+
+    //  Pause button (bottom-right corner) 
+    this.el.pauseBtn.addEventListener('click', () => {
+      if (this.engine && this.engine.state === 'playing') {
+        this.engine.pause();
+        this.el.pauseOverlay.classList.remove('hidden');
+      }
+    });
+
+    //  Menu button (from results screen) 
+    this.el.menuBtn.addEventListener('click', () => {
+      this.switchScreen('menu');
+    });
+  }
+
+  //  Engine message handler 
+
+  handleEngineMessage(msg) {
+    if (msg.type === 'tick') {
+      const isReaction = msg.mode === 'reaction';
+      this.el.hudScore.textContent    = isReaction ? msg.score + 'ms' : msg.score;
+      this.el.hudAccuracy.textContent = isReaction ? '—' : msg.accuracy + '%';
+      this.el.hudCombo.textContent    = isReaction ? '—' : 'x' + msg.combo;
+      this.el.hudHits.textContent     = msg.hits;
+      this.el.hudBest.textContent     = msg.best || 0;
+
+      // Progress ring (circular countdown).
+      const ring         = this.el.progressRing;
+      const circumference = 263.89; // 2 * PI * 42 (the SVG circle radius)
+      let progress;
+
+      if (msg.mode === 'reaction') {
+        const totalRounds = msg.totalRounds || 15;
+        const done        = msg.round || 0;
+        this.el.hudTime.textContent = (totalRounds - done) + '/' + totalRounds;
+        progress = done / totalRounds;
+      } else {
+        this.el.hudTime.textContent = Math.ceil(msg.timeLeft);
+        progress = msg.totalTime > 0 ? msg.timeLeft / msg.totalTime : 0;
+      }
+
+      ring.style.strokeDashoffset = circumference * (1 - progress);
+
+      // Colour transitions: ochre → deeper ochre → sienna alert as time runs low.
+      ring.style.stroke = progress < 0.25 ? 'c45a36'
+                        : progress < 0.50 ? '#d9a53a'
+                        : 'var(--acid)';
+
+      // Highlight combo text when on a streak.
+      this.el.hudCombo.style.color = msg.combo >= 3 ? 'var(--acid)' : '';
+    }
+
+    if (msg.type === 'end') {
+      this.showResults(msg.session, msg.isNewBest);
+    }
+  }
+
+  //  Screen transitions 
+
+  switchScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    if (name === 'menu')    this.el.menu.classList.add('active');
+    if (name === 'game')    this.el.game.classList.add('active');
+    if (name === 'results') this.el.results.classList.add('active');
+  }
+
+  //  Results screen 
+
+  showResults(session, isNewBest) {
+    const isReaction = session.mode === 'reaction';
+    const suffix     = isReaction ? 'ms' : '';
+    this.el.resultScore.textContent     = session.score + suffix;
+    this.el.resultPrevBest.textContent  = (session.previousBest || 0) + (isReaction && session.previousBest ? 'ms' : '');
+    this.el.resultAccuracy.textContent  = session.accuracy + '%';
+    this.el.resultHits.textContent      = session.hits;
+    this.el.resultMisses.textContent    = session.misses;
+    this.el.resultCombo.textContent     = 'x' + session.bestCombo;
+    this.el.resultReaction.textContent  = session.avgReaction > 0 ? session.avgReaction + 'ms' : '—';
+    this.el.resultModeBadge.textContent = session.mode.toUpperCase();
+
+    if (isNewBest) {
+      this.el.resultNewBest.classList.remove('hidden');
+    } else {
+      this.el.resultNewBest.classList.add('hidden');
+    }
+
+    this.refreshBestDisplay();
+    this.switchScreen('results');
+
+    // Re-trigger the slide-in animation by briefly resetting it.
+    const firstCard = document.querySelector('.result-card');
+    if (firstCard) {
+      firstCard.style.animation = 'none';
+      void firstCard.offsetWidth;
+      firstCard.style.animation = '';
+    }
+  }
+
+  //  Best score display 
+
+  refreshBestDisplay() {
+    const stats = this.engine ? this.engine.stats : new StatsManager();
+    const bestScores = stats.getAllBest();
+
+    MODES.forEach(mode => {
+      // Dynamic property lookup: this.el.bestClassic, this.el.bestPrecision, etc.
+      const element = this.el['best' + mode.charAt(0).toUpperCase() + mode.slice(1)];
+      if (element) {
+        element.textContent = bestScores[mode] || 0;
+      }
+    });
+  }
+}
+
+
+
