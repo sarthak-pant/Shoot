@@ -202,7 +202,7 @@ class Target {
         this.direction += rand(-1, 1) * deltaTime;
         this.x += Math.cos(this.direction) * this.speed * deltaTime;
         this.y += Math.sin(this.direction) * this.speed * deltaTime;
-        this.x = clamp(this.x, this.radius + 10, canvasWidth  - this.radius - 10);
+        this.x = clamp(this.x, this.radius + 10, canvasWidth - this.radius - 10);
         this.y = clamp(this.y, this.radius + 10, canvasHeight - this.radius - 10);
         break;
 
@@ -216,7 +216,7 @@ class Target {
     }
   }
 
-  // Draw the target — outer glow, pulsing ring, inner dot, and crosshair.
+  // Draw the target - outer glow, pulsing ring, inner dot, and crosshair.
   render(context, now) {
     if (this.hit) return;
 
@@ -345,7 +345,7 @@ class StatsManager {
   // Record a completed session and persist it.
   // Set lowerIsBetter=true for reaction mode (lower average time wins).
   saveSession(session, lowerIsBetter = false) {
-    const { mode, score, accuracy, hits, misses, bestCombo, avgReaction } = session;
+    const {mode, score, accuracy, hits, misses, bestCombo, avgReaction } = session;
 
     this.data.totalSessions++;
 
@@ -373,47 +373,47 @@ class StatsManager {
 
 class GameEngine {
   constructor(canvas) {
-    this.canvas    = canvas;
-    this.context   = canvas.getContext('2d');
-    this.audio     = new AudioManager();
+    this.canvas = canvas;
+    this.context= canvas.getContext('2d');
+    this.audio = new AudioManager();
     this.particles = new ParticleSystem();
-    this.stats     = new StatsManager();
+    this.stats = new StatsManager();
 
     // Game state machine: idle → countdown → playing → paused → ended
-    this.state   = 'idle';
-    this.config  = null;
-    this.colors  = null;
-    this.mode    = 'classic';
+    this.state = 'idle';
+    this.config = null;
+    this.colors= null;
+    this.mode = 'classic';
 
     // Scoring.
-    this.score     = 0;
-    this.hits      = 0;
-    this.misses    = 0;
-    this.combo     = 0;
+    this.score = 0;
+    this.hits = 0;
+    this.misses = 0;
+    this.combo = 0;
     this.bestCombo = 0;
 
     // Timer.
-    this.timeLeft  = 0;
+    this.timeLeft = 0;
     this.totalTime = 0;
 
     // Reaction mode.
     this.reactionTimes = [];
-    this.round         = 0;
+    this.round = 0;
 
     // Spawn pacing.
     this.spawnCooldown = 0;
 
     // Screen shake.
-    this.shakeTime      = 0;
+    this.shakeTime = 0;
     this.shakeIntensity = 0;
-    this.shakeEnabled   = true;
+    this.shakeEnabled = true;
 
     // Settings.
     this.bgAnimation = true;
 
     // Loop state.
     this.lastFrame = 0;
-    this.animId    = null;
+    this.animId = null;
     // Called by the engine each frame and on game-end.
     this.onUpdate = null;
 
@@ -433,14 +433,14 @@ class GameEngine {
 
   resize() {
     const dpr = window.devicePixelRatio || 1;
-    const cssWidth  = this.canvas.clientWidth;
+    const cssWidth = this.canvas.clientWidth;
     const cssHeight = this.canvas.clientHeight;
 
-    this.canvas.width  = cssWidth  * dpr;
+    this.canvas.width = cssWidth  * dpr;
     this.canvas.height = cssHeight * dpr;
     this.context.scale(dpr, dpr);
 
-    this.width  = cssWidth;
+    this.width = cssWidth;
     this.height = cssHeight;
   }
 
@@ -448,25 +448,25 @@ class GameEngine {
 
   // Start a new game in the given mode.
   startMode(mode) {
-    this.mode   = mode;
+    this.mode = mode;
     this.config = { ...MODE_CONFIG[mode], targetRadius: MODE_CONFIG[mode].targetRadius };
     this.colors = MODE_COLORS[mode];
 
     // Reset all state.
-    this.score        = 0;
-    this.hits         = 0;
-    this.misses       = 0;
-    this.combo        = 0;
-    this.bestCombo    = 0;
-    this.targets      = [];
+    this.score = 0;
+    this.hits  = 0;
+    this.misses = 0;
+    this.combo = 0;
+    this.bestCombo= 0;
+    this.targets = [];
     this.reactionTimes = [];
-    this.round        = 0;
-    this.shakeTime    = 0;
+    this.round = 0;
+    this.shakeTime = 0;
     this.particles.particles = [];
 
     if (mode === 'reaction') {
       this.totalTime = 0;
-      this.timeLeft  = 0;
+      this.timeLeft = 0;
     } else {
       const duration = this.config.duration || 60;
       this.totalTime = duration;
@@ -480,7 +480,7 @@ class GameEngine {
   // 3-2-1 countdown before the game starts.
   runCountdown() {
     let count = 3;
-    const overlay    = getElem('countdown-overlay');
+    const overlay = getElem('countdown-overlay');
     const numberElem = getElem('countdown-number');
 
     overlay.classList.remove('hidden');
@@ -535,7 +535,7 @@ class GameEngine {
 
     this.audio.gameOver();
 
-    const accuracy    = this.hits + this.misses > 0
+    const accuracy = this.hits + this.misses > 0
       ? Math.round((this.hits / (this.hits + this.misses)) * 100) : 0;
 
     const avgReaction = this.reactionTimes.length > 0
@@ -840,55 +840,55 @@ class GameEngine {
         if (m !== 'reaction') MODE_CONFIG[m].duration = parseInt(value);
       });
     }
-    if (key === 'sound')  this.audio.enabled   = (value === 'on');
-    if (key === 'shake')  this.shakeEnabled    = (value === 'on');
-    if (key === 'bg')     this.bgAnimation     = (value === 'on');
+    if (key === 'sound') this.audio.enabled = (value === 'on');
+    if (key === 'shake') this.shakeEnabled = (value === 'on');
+    if (key === 'bg') this.bgAnimation = (value === 'on');
   }
 }
 
 
 class UIController {
   constructor() {
-    this.engine       = null;
-    this.currentMode  = 'classic';
+    this.engine = null;
+    this.currentMode = 'classic';
 
     // Map of logical names → DOM element IDs for the UI cache (this.el).
     this.idMap = {
-      menu:              'menu-screen',
-      game:              'game-screen',
-      results:           'results-screen',
-      startBtn:          'start-btn',
-      settingsToggle:    'settings-toggle',
-      settingsPanel:     'settings-panel',
-      settingsClose:     'settings-close',
-      pauseOverlay:      'pause-overlay',
-      resumeBtn:         'resume-btn',
-      quitBtn:           'quit-btn',
-      retryBtn:          'retry-btn',
-      menuBtn:           'menu-btn',
-      pauseBtn:          'pause-btn',
-      hudScore:          'hud-score',
-      hudAccuracy:       'hud-accuracy',
-      hudCombo:          'hud-combo',
-      hudHits:           'hud-hits',
-      hudTime:           'hud-time',
-      hudBest:           'hud-best',
-      hudMode:           'hud-mode',
-      progressRing:      'progress-ring',
-      resultScore:       'result-score',
-      resultPrevBest:    'result-prev-best',
-      resultAccuracy:    'result-accuracy',
-      resultHits:        'result-hits',
-      resultMisses:      'result-misses',
-      resultCombo:       'result-combo',
-      resultReaction:    'result-reaction',
-      resultNewBest:     'result-new-best',
-      resultModeBadge:   'result-mode-badge',
-      bestClassic:       'best-classic',
-      bestPrecision:     'best-precision',
-      bestSpeed:         'best-speed',
-      bestReaction:      'best-reaction',
-      bestTracking:      'best-tracking',
+      menu:'menu-screen',
+      game:'game-screen',
+      results:'results-screen',
+      startBtn: 'start-btn',
+      settingsToggle:'settings-toggle',
+      settingsPanel:'settings-panel',
+      settingsClose: 'settings-close',
+      pauseOverlay: 'pause-overlay',
+      resumeBtn: 'resume-btn',
+      quitBtn:'quit-btn',
+      retryBtn:'retry-btn',
+      menuBtn: 'menu-btn',
+      pauseBtn: 'pause-btn',
+      hudScore: 'hud-score',
+      hudAccuracy:'hud-accuracy',
+      hudCombo:'hud-combo',
+      hudHits: 'hud-hits',
+      hudTime:'hud-time',
+      hudBest:'hud-best',
+      hudMode:'hud-mode',
+      progressRing:'progress-ring',
+      resultScore:'result-score',
+      resultPrevBest:'result-prev-best',
+      resultAccuracy:'result-accuracy',
+      resultHits: 'result-hits',
+      resultMisses: 'result-misses',
+      resultCombo:  'result-combo',
+      resultReaction:'result-reaction',
+      resultNewBest:'result-new-best',
+      resultModeBadge:'result-mode-badge',
+      bestClassic: 'best-classic',
+      bestPrecision:'best-precision',
+      bestSpeed:'best-speed',
+      bestReaction:'best-reaction',
+      bestTracking:'best-tracking',
     };
 
     // Build element cache.
@@ -898,7 +898,7 @@ class UIController {
     });
 
     // Additional elements not in the ID map.
-    this.el.modeBtns        = document.querySelectorAll('.mode-btn');
+    this.el.modeBtns = document.querySelectorAll('.mode-btn');
     this.el.settingsBackdrop = document.querySelector('.settings-backdrop');
 
     // Bootstrap.
@@ -911,9 +911,9 @@ class UIController {
     // Maps setting-group DOM IDs → engine setting keys.
     const settingMap = {
       'duration-options': 'duration',
-      'sound-options':    'sound',
-      'shake-options':    'shake',
-      'bg-options':       'bg',
+      'sound-options':'sound',
+      'shake-options': 'shake',
+      'bg-options': 'bg',
     };
 
     // Mode selector 
@@ -967,8 +967,8 @@ class UIController {
         if (value) this.engine.applySetting(settingMap[groupId], value);
       });
 
-      this.el.hudBest.textContent  = this.engine.stats.getBest(this.currentMode) || 0;
-      this.el.hudMode.textContent  = this.currentMode.toUpperCase();
+      this.el.hudBest.textContent = this.engine.stats.getBest(this.currentMode) || 0;
+      this.el.hudMode.textContent= this.currentMode.toUpperCase();
 
       this.switchScreen('game');
       this.engine.startMode(this.currentMode);
@@ -1050,20 +1050,20 @@ class UIController {
   handleEngineMessage(msg) {
     if (msg.type === 'tick') {
       const isReaction = msg.mode === 'reaction';
-      this.el.hudScore.textContent    = isReaction ? msg.score + 'ms' : msg.score;
-      this.el.hudAccuracy.textContent = isReaction ? '—' : msg.accuracy + '%';
-      this.el.hudCombo.textContent    = isReaction ? '—' : 'x' + msg.combo;
-      this.el.hudHits.textContent     = msg.hits;
-      this.el.hudBest.textContent     = msg.best || 0;
+      this.el.hudScore.textContent = isReaction ? msg.score + 'ms' : msg.score;
+      this.el.hudAccuracy.textContent= isReaction ? '—' : msg.accuracy + '%';
+      this.el.hudCombo.textContent = isReaction ? '—' : 'x' + msg.combo;
+      this.el.hudHits.textContent= msg.hits;
+      this.el.hudBest.textContent = msg.best || 0;
 
       // Progress ring (circular countdown).
-      const ring         = this.el.progressRing;
+      const ring  = this.el.progressRing;
       const circumference = 263.89; // 2 * PI * 42 (the SVG circle radius)
       let progress;
 
       if (msg.mode === 'reaction') {
         const totalRounds = msg.totalRounds || 15;
-        const done        = msg.round || 0;
+        const done = msg.round || 0;
         this.el.hudTime.textContent = (totalRounds - done) + '/' + totalRounds;
         progress = done / totalRounds;
       } else {
@@ -1091,8 +1091,8 @@ class UIController {
 
   switchScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    if (name === 'menu')    this.el.menu.classList.add('active');
-    if (name === 'game')    this.el.game.classList.add('active');
+    if (name === 'menu')this.el.menu.classList.add('active');
+    if (name === 'game') this.el.game.classList.add('active');
     if (name === 'results') this.el.results.classList.add('active');
   }
 
@@ -1100,14 +1100,14 @@ class UIController {
 
   showResults(session, isNewBest) {
     const isReaction = session.mode === 'reaction';
-    const suffix     = isReaction ? 'ms' : '';
-    this.el.resultScore.textContent     = session.score + suffix;
-    this.el.resultPrevBest.textContent  = (session.previousBest || 0) + (isReaction && session.previousBest ? 'ms' : '');
-    this.el.resultAccuracy.textContent  = session.accuracy + '%';
-    this.el.resultHits.textContent      = session.hits;
-    this.el.resultMisses.textContent    = session.misses;
-    this.el.resultCombo.textContent     = 'x' + session.bestCombo;
-    this.el.resultReaction.textContent  = session.avgReaction > 0 ? session.avgReaction + 'ms' : '—';
+    const suffix = isReaction ? 'ms' : '';
+    this.el.resultScore.textContent = session.score + suffix;
+    this.el.resultPrevBest.textContent = (session.previousBest || 0) + (isReaction && session.previousBest ? 'ms' : '');
+    this.el.resultAccuracy.textContent= session.accuracy + '%';
+    this.el.resultHits.textContent = session.hits;
+    this.el.resultMisses.textContent = session.misses;
+    this.el.resultCombo.textContent = 'x' + session.bestCombo;
+    this.el.resultReaction.textContent = session.avgReaction > 0 ? session.avgReaction + 'ms' : '—';
     this.el.resultModeBadge.textContent = session.mode.toUpperCase();
 
     if (isNewBest) {
