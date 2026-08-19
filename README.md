@@ -28,7 +28,7 @@ Design-wise I went with a dark, warm color palette instead of the usual cold neo
 
 ## Running it
 
-Clone it, open `index.html` in a browser, done. There's no server involved. If your browser is picky about local files, spin up any static file server (`python -m http.server` works fine) and point it at the folder.
+Clone it, open `index.html` in a browser, done. There's no server involved. If your browser is picky about local files, spin up any static file server (`python -m http.server` works fine) and point it at the folder. Or u can just go to: https://sarthak-pant.github.io/Shoot/ and directly play there.
 
 ## What I learned building this
 
